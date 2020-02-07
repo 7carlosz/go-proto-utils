@@ -83,7 +83,6 @@ func BuildWherePageable(callback interface{}, req interface{}) (string, []interf
 
 		if field != "Offset" && field != "Limit" && field != "Sort" {
 			var fieldData = reflect.ValueOf(req).Elem().FieldByName(field)
-
 			if fieldData.IsValid() && !fieldData.IsNil() {
 				count++
 			}
@@ -91,7 +90,7 @@ func BuildWherePageable(callback interface{}, req interface{}) (string, []interf
 		}
 
 	}
-	vals := make([]interface{}, count+3)
+	vals := make([]interface{}, count+2)
 
 	for i := 0; i < reflect.ValueOf(req).Elem().NumField()-3; i++ {
 
@@ -109,9 +108,8 @@ func BuildWherePageable(callback interface{}, req interface{}) (string, []interf
 
 	}
 
-	var order = " order by $" + strconv.Itoa(len(vals)-2)
+	var order = " order by " + pageable.Sort
 	var limitOrder = " limit $" + strconv.Itoa(len(vals)-1) + " offset $" + strconv.Itoa(len(vals))
-	vals[len(vals)-3] = pageable.Sort
 	vals[len(vals)-2] = pageable.Limit
 	vals[len(vals)-1] = pageable.Offset
 

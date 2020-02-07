@@ -16,6 +16,7 @@ import (
 func Init() {
 
 }
+
 func CoreReadBySearch(callbackPageable interface{}, callback interface{}, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
 	where, vals, order, limitOrder := utils.BuildWherePageable(callbackPageable, req)
