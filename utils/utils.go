@@ -347,9 +347,10 @@ func ScanData(interf interface{}, rows *sql.Rows, listColumn []string, dateValid
 	for index := 0; index < len(listColumn); index++ {
 
 		s, _ := listRec[index].(*sql.NullString)
-		if s.Valid {
-			ptr := v.FieldByName(listColumn[index])
 
+		if s.Valid {
+			fmt.Println("es valido" + listColumn[index])
+			ptr := v.FieldByName(listColumn[index])
 			if ptr.Type().String() == "int64" {
 				data, err := strconv.Atoi(s.String)
 				if err != nil {
@@ -363,9 +364,9 @@ func ScanData(interf interface{}, rows *sql.Rows, listColumn []string, dateValid
 				} else if stringInSlice(listColumn[index], listHours) {
 					ptr.Set(reflect.ValueOf(FormatHours(s.String)))
 				} else if stringInSlice(listColumn[index], listDateHour) {
-
 					ptr.Set(reflect.ValueOf(FormatDateHours(s.String)))
 				} else {
+					fmt.Println(s.String)
 					ptr.Set(reflect.ValueOf(s.String))
 				}
 
