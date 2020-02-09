@@ -265,6 +265,11 @@ func FormatDate(str1 string) string {
 	if err != nil {
 		fmt.Println(err)
 	}
+	if t.Format("2006-01-02") == "0001-01-01" {
+		dt, _ := time.Parse("01/02/2006 15:04:05", str1)
+		return dt.Format("2006-01-02")
+	}
+
 	return t.Format("2006-01-02")
 }
 
@@ -275,16 +280,27 @@ func FormatHours(str1 string) string {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	if t.Format("2006-01-02 15:04:05") == "0001-01-01 00:00:00" {
+		dt, _ := time.Parse("01/02/2006 15:04:05", str1)
+		return dt.Format("15:04:05")
+	}
+
 	return t.Format("15:04:05")
 
 }
 
 func FormatDateHours(str1 string) string {
-
+	fmt.Println(str1)
 	t, err := time.Parse(time.RFC3339, str1)
 
 	if err != nil {
 		fmt.Println(err)
+	}
+
+	if t.Format("2006-01-02 15:04:05") == "0001-01-01 00:00:00" {
+		dt, _ := time.Parse("01/02/2006 15:04:05", str1)
+		return dt.Format("2006-01-02 15:04:05")
 	}
 	return t.Format("2006-01-02 15:04:05")
 }
