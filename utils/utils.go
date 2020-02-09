@@ -291,9 +291,7 @@ func FormatHours(str1 string) string {
 }
 
 func FormatDateHours(str1 string) string {
-	fmt.Println(str1)
 	t, err := time.Parse(time.RFC3339, str1)
-
 	if err != nil {
 		fmt.Println(err)
 	}
