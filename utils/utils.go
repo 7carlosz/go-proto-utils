@@ -3,7 +3,6 @@ package utils
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -186,9 +185,10 @@ func BuildUpdate(entity interface{}) (string, []interface{}) {
 		if !strings.EqualFold(field, "id") && fieldData.IsValid() && fieldData.String() != "" {
 			field = convertFiledNameColumn(field)
 
-			log.Println(fieldData.String())
 			if fieldData.String() == "[null]" {
 				vals[index] = nil
+			} else if fieldData.String() == "[clear]" {
+				vals[index] = ""
 			} else {
 				vals[index] = fieldData.String()
 			}
