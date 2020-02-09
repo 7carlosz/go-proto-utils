@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strconv"
-	"strings"
 
 	"github.com/7carlosz/go-proto-utils/utils"
 	"google.golang.org/grpc/codes"
@@ -53,10 +51,6 @@ func remove(slice []interface{}, s int) []interface{} {
 func CoreReadDistinctBySearch(callbackPageable interface{}, callback interface{}, disctintColumn string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
 	where, vals, _, limitOrder := utils.BuildWherePageable(callbackPageable, req)
-	vals = remove(vals, len(vals)-3)
-
-	limitOrder = strings.ReplaceAll(limitOrder, "$"+strconv.Itoa(len(vals)), "$"+strconv.Itoa(len(vals)-1))
-	limitOrder = strings.ReplaceAll(limitOrder, "$"+strconv.Itoa(len(vals)+1), "$"+strconv.Itoa(len(vals)))
 
 	queryDinamic := "SELECT distinct " + disctintColumn + "	FROM  " + tabla + " " + where + " order by 1 " + limitOrder
 	rows, err := c.QueryContext(ctx, queryDinamic,
