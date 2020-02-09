@@ -161,7 +161,7 @@ func BuildCreate(entity interface{}) (string, string, []interface{}) {
 }
 
 func BuildUpdate(entity interface{}) (string, []interface{}) {
-	log.Println("build update")
+
 	val := reflect.Indirect(reflect.ValueOf(entity))
 	var setString = ""
 
@@ -187,7 +187,12 @@ func BuildUpdate(entity interface{}) (string, []interface{}) {
 			field = convertFiledNameColumn(field)
 
 			log.Println(fieldData.String())
-			vals[index] = fieldData.String()
+			if fieldData.String() == "[null]" {
+				vals[index] = nil
+			} else {
+				vals[index] = fieldData.String()
+			}
+
 			setString = setString + ", " + field + "  = $" + strconv.Itoa(index+1)
 			index++
 		} else if strings.EqualFold(field, "id") {
