@@ -75,8 +75,8 @@ func CoreReadAll(callback interface{}, entity interface{}, ctx context.Context, 
 
 	selectString, selectArray := utils.BuildSelect(entity)
 
-	rows, err := c.QueryContext(ctx, " select "+selectString+"	FROM "+tabla+" order by $1 limit $2 offset $3",
-		pageable.Sort, pageable.Limit, pageable.Offset,
+	rows, err := c.QueryContext(ctx, " select "+selectString+"	FROM "+tabla+" order by "+pageable.Sort+" limit $1 offset $2",
+		pageable.Limit, pageable.Offset,
 	)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to select -> "+err.Error())
