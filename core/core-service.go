@@ -90,6 +90,22 @@ func CoreReadAll(callback interface{}, entity interface{}, ctx context.Context, 
 	return list, nil
 }
 
+func CoreQueryReadAll(query string, callback interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+	_, selectArray := utils.BuildSelect(entity)
+	rows, err := c.QueryContext(ctx, query)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, "failed to select -> "+err.Error())
+	}
+	defer rows.Close()
+	log.Println("aca")
+
+	list := TraducirRespuestaListCore(callback, entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	if len(list) < 1 {
+		return nil, status.Error(codes.NotFound, "Recurso no encontrado")
+	}
+	return list, nil
+}
+
 func CoreRead(callback interface{}, ctx context.Context, c *sql.Conn, id int64, req interface{}, dateValidate, hourValidate, dateHourValidate string, tabla string) (interface{}, error) {
 	rows, selectArray, err := CorebuscarPorId(ctx, c, id, req, tabla)
 
