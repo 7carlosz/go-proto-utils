@@ -260,47 +260,71 @@ func GetDataPageableInt(mask *field_mask.FieldMask, defaultData int64) int64 {
 
 func FormatDate(str1 string) string {
 
-	t, err := time.Parse(time.RFC3339, str1)
+	i := strings.Index(str1, "T")
 
-	if err != nil {
-		fmt.Println(err)
-	}
-	if t.Format("2006-01-02") == "0001-01-01" {
-		dt, _ := time.Parse("01/02/2006 15:04:05", str1)
-		return dt.Format("2006-01-02")
+	if i > -1 {
+		t, err := time.Parse(time.RFC3339, str1)
+		if err != nil {
+			fmt.Println("error parseo forma date ")
+			fmt.Println(err)
+		}
+		return t.Format("2006-01-02")
+	} else {
+		i := strings.Index(str1, "/")
+		if i > -1 {
+			dt, _ := time.Parse("01/02/2006 15:04:05", str1)
+			return dt.Format("2006-01-02")
+		} else {
+			dt, _ := time.Parse("01-02-2006 15:04:05", str1)
+			return dt.Format("2006-01-02")
+		}
 	}
 
-	return t.Format("2006-01-02")
 }
 
 func FormatHours(str1 string) string {
+	i := strings.Index(str1, "T")
 
-	t, err := time.Parse(time.RFC3339, str1)
-
-	if err != nil {
-		fmt.Println(err)
+	if i > -1 {
+		t, err := time.Parse(time.RFC3339, str1)
+		if err != nil {
+			fmt.Println("error parseo forma date ")
+			fmt.Println(err)
+		}
+		return t.Format("15:04:05")
+	} else {
+		i := strings.Index(str1, "/")
+		if i > -1 {
+			dt, _ := time.Parse("01/02/2006 15:04:05", str1)
+			return dt.Format("15:04:05")
+		} else {
+			dt, _ := time.Parse("01-02-2006 15:04:05", str1)
+			return dt.Format("15:04:05")
+		}
 	}
-
-	if t.Format("2006-01-02 15:04:05") == "0001-01-01 00:00:00" {
-		dt, _ := time.Parse("01/02/2006 15:04:05", str1)
-		return dt.Format("15:04:05")
-	}
-
-	return t.Format("15:04:05")
 
 }
 
 func FormatDateHours(str1 string) string {
-	t, err := time.Parse(time.RFC3339, str1)
-	if err != nil {
-		fmt.Println(err)
-	}
+	i := strings.Index(str1, "T")
 
-	if t.Format("2006-01-02 15:04:05") == "0001-01-01 00:00:00" {
-		dt, _ := time.Parse("01/02/2006 15:04:05", str1)
-		return dt.Format("2006-01-02 15:04:05")
+	if i > -1 {
+		t, err := time.Parse(time.RFC3339, str1)
+		if err != nil {
+			fmt.Println("error parseo forma date ")
+			fmt.Println(err)
+		}
+		return t.Format("2006-01-02 15:04:05")
+	} else {
+		i := strings.Index(str1, "/")
+		if i > -1 {
+			dt, _ := time.Parse("01/02/2006 15:04:05", str1)
+			return dt.Format("2006-01-02 15:04:05")
+		} else {
+			dt, _ := time.Parse("01-02-2006 15:04:05", str1)
+			return dt.Format("2006-01-02 15:04:05")
+		}
 	}
-	return t.Format("2006-01-02 15:04:05")
 }
 
 func NewNullString(s string) sql.NullString {
