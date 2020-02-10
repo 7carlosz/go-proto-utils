@@ -272,11 +272,17 @@ func FormatDate(str1 string) string {
 	} else {
 		i := strings.Index(str1, "/")
 		if i > -1 {
-			dt, _ := time.Parse("01/02/2006 15:04:05", str1)
+			dt, _ := time.Parse("01/02/2006", str1)
 			return dt.Format("2006-01-02")
 		} else {
-			dt, _ := time.Parse("01-02-2006 15:04:05", str1)
-			return dt.Format("2006-01-02")
+			dt, _ := time.Parse("01-02-2006", str1)
+			if dt.Format("2006-01-02") == "0001-01-01" {
+				dt, _ := time.Parse("2006-02-01", str1)
+				return dt.Format("2006-01-02")
+			} else {
+				return dt.Format("2006-01-02")
+			}
+
 		}
 	}
 
@@ -299,7 +305,13 @@ func FormatHours(str1 string) string {
 			return dt.Format("15:04:05")
 		} else {
 			dt, _ := time.Parse("01-02-2006 15:04:05", str1)
-			return dt.Format("15:04:05")
+			if dt.Format("15:04:05") == "00:00:00" {
+				dt, _ := time.Parse("2006-02-01 15:04:05", str1)
+				return dt.Format("15:04:05")
+			} else {
+				return dt.Format("15:04:05")
+			}
+
 		}
 	}
 
@@ -316,13 +328,20 @@ func FormatDateHours(str1 string) string {
 		}
 		return t.Format("2006-01-02 15:04:05")
 	} else {
+
 		i := strings.Index(str1, "/")
 		if i > -1 {
 			dt, _ := time.Parse("01/02/2006 15:04:05", str1)
 			return dt.Format("2006-01-02 15:04:05")
 		} else {
 			dt, _ := time.Parse("01-02-2006 15:04:05", str1)
-			return dt.Format("2006-01-02 15:04:05")
+			if dt.Format("2006-01-02 15:04:05") == "0001-01-01 00:00:00" {
+				dt, _ := time.Parse("2006-02-01 15:04:05", str1)
+				return dt.Format("2006-01-02 15:04:05")
+			} else {
+				return dt.Format("2006-01-02 15:04:05")
+			}
+
 		}
 	}
 }
