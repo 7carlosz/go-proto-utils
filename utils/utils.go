@@ -84,7 +84,10 @@ func BuildWherePageable(callback interface{}, req interface{}) (string, []interf
 		if field != "Offset" && field != "Limit" && field != "Sort" {
 			var fieldData = reflect.ValueOf(req).Elem().FieldByName(field)
 			if fieldData.IsValid() && !fieldData.IsNil() {
-				count++
+				var data = fieldData.Interface().(*field_mask.FieldMask)
+				if data.Paths[0] != "[null]" {
+					count++
+				}
 			}
 
 		}
@@ -99,9 +102,13 @@ func BuildWherePageable(callback interface{}, req interface{}) (string, []interf
 		if field != "Offset" && field != "Limit" && field != "Sort" {
 			if fieldData.IsValid() && !fieldData.IsNil() {
 				var data = fieldData.Interface().(*field_mask.FieldMask)
-				vals[index] = data.Paths[0]
-				where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
-				index++
+				if data.Paths[0] == "[null]" {
+					where = where + convertFiledNameColumn(field) + " is null and "
+				} else {
+					vals[index] = data.Paths[0]
+					where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+					index++
+				}
 			}
 
 		}
