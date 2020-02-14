@@ -23,10 +23,6 @@ type Retorno struct {
 	Djcp string
 }
 
-type NewEntityInterface interface {
-	Call(interface{}) interface{}
-}
-
 type NewPageableInterface interface {
 	Call(interface{}) Pageable
 }

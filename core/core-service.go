@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"reflect"
 
 	"github.com/7carlosz/go-proto-utils/utils"
 	"google.golang.org/grpc/codes"
@@ -15,7 +16,7 @@ func Init() {
 
 }
 
-func CoreReadBySearch(callbackPageable interface{}, callback interface{}, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreReadBySearch(callbackPageable interface{}, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
 	where, vals, order, limitOrder := utils.BuildWherePageable(callbackPageable, req)
 	selectString, selectArray := utils.BuildSelect(entity)
@@ -30,7 +31,7 @@ func CoreReadBySearch(callbackPageable interface{}, callback interface{}, req in
 	}
 	defer rows.Close()
 
-	list := TraducirRespuestaListCore(callback, entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	list := TraducirRespuestaListCore(entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
 	if len(list) < 1 {
 		return nil, status.Error(codes.NotFound, "Recurso no encontrado")
 	}
@@ -48,7 +49,7 @@ func remove(slice []interface{}, s int) []interface{} {
 	}
 	return ret
 }
-func CoreReadDistinctBySearch(callbackPageable interface{}, callback interface{}, disctintColumn string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreReadDistinctBySearch(callbackPageable interface{}, disctintColumn string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
 	where, vals, _, limitOrder := utils.BuildWherePageable(callbackPageable, req)
 
@@ -64,14 +65,14 @@ func CoreReadDistinctBySearch(callbackPageable interface{}, callback interface{}
 	retColumnDistinct := make([]string, 0)
 	retColumnDistinct = append(retColumnDistinct, disctintColumn)
 
-	list := TraducirRespuestaListCore(callback, new(utils.Retorno), rows, retColumnDistinct, dateValidate, hourValidate, dateHourValidate)
+	list := TraducirRespuestaListCore(new(utils.Retorno), rows, retColumnDistinct, dateValidate, hourValidate, dateHourValidate)
 	if len(list) < 1 {
 		return nil, status.Error(codes.NotFound, "Recurso no encontrado")
 	}
 	return list, nil
 }
 
-func CoreReadAll(callback interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreReadAll(entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
 	selectString, selectArray := utils.BuildSelect(entity)
 
@@ -83,30 +84,29 @@ func CoreReadAll(callback interface{}, entity interface{}, ctx context.Context, 
 	}
 	defer rows.Close()
 
-	list := TraducirRespuestaListCore(callback, entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	list := TraducirRespuestaListCore(entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
 	if len(list) < 1 {
 		return nil, status.Error(codes.NotFound, "Recurso no encontrado")
 	}
 	return list, nil
 }
 
-func CoreQueryReadAll(query string, callback interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreQueryReadAll(query string, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 	_, selectArray := utils.BuildSelect(entity)
 	rows, err := c.QueryContext(ctx, query)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to select -> "+err.Error())
 	}
 	defer rows.Close()
-	log.Println("aca")
 
-	list := TraducirRespuestaListCore(callback, entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	list := TraducirRespuestaListCore(entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
 	if len(list) < 1 {
 		return nil, status.Error(codes.NotFound, "Recurso no encontrado")
 	}
 	return list, nil
 }
 
-func CoreRead(callback interface{}, ctx context.Context, c *sql.Conn, id int64, req interface{}, dateValidate, hourValidate, dateHourValidate string, tabla string) (interface{}, error) {
+func CoreRead(ctx context.Context, c *sql.Conn, id int64, req interface{}, dateValidate, hourValidate, dateHourValidate string, tabla string) (interface{}, error) {
 	rows, selectArray, err := CorebuscarPorId(ctx, c, id, req, tabla)
 
 	if err != nil {
@@ -115,7 +115,7 @@ func CoreRead(callback interface{}, ctx context.Context, c *sql.Conn, id int64, 
 
 	defer rows.Close()
 	list := make([]interface{}, 0)
-	list = TraducirRespuestaListCore(callback, req, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	list = TraducirRespuestaListCore(req, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
 
 	if len(list) > 0 {
 		return list[0], nil
@@ -125,7 +125,7 @@ func CoreRead(callback interface{}, ctx context.Context, c *sql.Conn, id int64, 
 
 }
 
-func CoreCreate(callback interface{}, s interface{}, ctx context.Context, c *sql.Conn, req interface{}, dateValidate, hourValidate, dateHourValidate string, tabla string) (interface{}, error) {
+func CoreCreate(s interface{}, ctx context.Context, c *sql.Conn, req interface{}, dateValidate, hourValidate, dateHourValidate string, tabla string) (interface{}, error) {
 
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "datos invalidos ")
@@ -168,7 +168,7 @@ func CoreCreate(callback interface{}, s interface{}, ctx context.Context, c *sql
 
 	defer rows.Close()
 	list := make([]interface{}, 0)
-	list = TraducirRespuestaListCore(callback, req, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	list = TraducirRespuestaListCore(req, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
 
 	if len(list) > 0 {
 		return list[0], nil
@@ -192,7 +192,7 @@ func CorebuscarPorId(ctx context.Context, c *sql.Conn, id int64, req interface{}
 	return rows, selectArray, nil
 }
 
-func CoreUpdate(callback interface{}, id int64, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) (interface{}, error) {
+func CoreUpdate(id int64, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) (interface{}, error) {
 
 	setString, values := utils.BuildUpdate(entity)
 
@@ -224,7 +224,7 @@ func CoreUpdate(callback interface{}, id int64, entity interface{}, ctx context.
 
 	defer rows.Close()
 	list := make([]interface{}, 0)
-	list = TraducirRespuestaListCore(callback, entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	list = TraducirRespuestaListCore(entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
 
 	if len(list) > 0 {
 		return list[0], nil
@@ -252,12 +252,11 @@ func CoreDelete(id int64, ctx context.Context, c *sql.Conn, tabla string) (int64
 	return rows, nil
 }
 
-func TraducirRespuestaListCore(callback interface{}, entity interface{}, rows *sql.Rows, listColumn []string, dateValidate, hourValidate, dateHourValidate string) []interface{} {
+func TraducirRespuestaListCore(entity interface{}, rows *sql.Rows, listColumn []string, dateValidate, hourValidate, dateHourValidate string) []interface{} {
 	list := make([]interface{}, 0)
-	call := callback.(utils.NewEntityInterface)
 
 	for rows.Next() {
-		interfs := utils.ScanData(call.Call(entity), rows, listColumn, dateValidate, hourValidate, dateHourValidate)
+		interfs := utils.ScanData(reflect.New(reflect.TypeOf(entity)), rows, listColumn, dateValidate, hourValidate, dateHourValidate)
 		list = append(list, interfs)
 	}
 
