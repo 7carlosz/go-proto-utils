@@ -23,10 +23,6 @@ type Retorno struct {
 	Djcp string
 }
 
-type NewPageableInterface interface {
-	Call(interface{}) Pageable
-}
-
 func Init() {
 
 }
@@ -65,11 +61,9 @@ func BuildSelect(req interface{}) (string, []string) {
 }
 
 //var call util.NewEntityInterface = NewEntity{}
-func BuildWherePageable(callback interface{}, req interface{}) (string, []interface{}, string, string) {
+func BuildWherePageable(req interface{}) (string, []interface{}, string, string) {
 
-	call := callback.(NewPageableInterface)
-	var pageable Pageable = call.Call(req)
-
+	pageable := ConvertPageable(req)
 	val := reflect.Indirect(reflect.ValueOf(req))
 	var where string = ""
 	var index int = 0
@@ -232,33 +226,6 @@ func convertFiledNameColumn(field string) string {
 	}
 
 	return ret
-}
-
-type IPageable struct {
-	Offset, Limit, Sort string
-}
-
-func GetDataPageableString(mask *field_mask.FieldMask, defaultData string) string {
-
-	if mask != nil {
-		defaultData = mask.Paths[0]
-	}
-
-	return defaultData
-}
-
-func GetDataPageableInt(mask *field_mask.FieldMask, defaultData int64) int64 {
-
-	if mask != nil {
-		data, err := strconv.Atoi(mask.Paths[0])
-		if err != nil {
-			// handle error
-			fmt.Println(err)
-		}
-		defaultData = int64(data)
-	}
-
-	return defaultData
 }
 
 func FormatDate(str1 string) string {
@@ -492,4 +459,51 @@ func ValidateFechas(interf interface{}, date, hour, dateHour string) string {
 	}
 
 	return ""
+}
+
+func ConvertPageable(interf interface{}) Pageable {
+
+	var pageable = Pageable{Offset: 0, Limit: 50, Sort: "id"}
+
+	req := reflect.New(reflect.TypeOf(interf))
+	val := reflect.Indirect(reflect.ValueOf(interf))
+
+	for i := 0; i < reflect.TypeOf(req).NumField(); i++ {
+		var field = val.Type().Field(i).Name
+		var fieldData = reflect.ValueOf(req).FieldByName(field)
+
+		if field != "Offset" {
+			pageable.Offset = GetDataPageableInt(fieldData, pageable.Offset)
+		} else if field == "Limit" {
+			pageable.Limit = GetDataPageableInt(fieldData, pageable.Limit)
+		} else if field == "Sort" {
+			pageable.Sort = GetDataPageableString(fieldData, pageable.Sort)
+		}
+
+	}
+
+	return pageable
+}
+
+func GetDataPageableInt(mask reflect.Value, defaultData int64) int64 {
+
+	if mask.IsValid() && mask.String() != "" {
+		data, err := strconv.Atoi(mask.String())
+		if err != nil {
+			// handle error
+			fmt.Println(err)
+		}
+		defaultData = int64(data)
+	}
+
+	return defaultData
+}
+
+func GetDataPageableString(mask reflect.Value, defaultData string) string {
+
+	if mask.IsValid() && mask.String() != "" {
+		defaultData = mask.String()
+	}
+
+	return defaultData
 }

@@ -16,9 +16,9 @@ func Init() {
 
 }
 
-func CoreReadBySearch(callbackPageable interface{}, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreReadBySearch(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, order, limitOrder := utils.BuildWherePageable(callbackPageable, req)
+	where, vals, order, limitOrder := utils.BuildWherePageable(req)
 	selectString, selectArray := utils.BuildSelect(entity)
 
 	var query string = "SELECT " + selectString + "	FROM  " + tabla + " " + where + " " + order + " " + limitOrder
@@ -49,9 +49,9 @@ func remove(slice []interface{}, s int) []interface{} {
 	}
 	return ret
 }
-func CoreReadDistinctBySearch(callbackPageable interface{}, disctintColumn string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreReadDistinctBySearch(disctintColumn string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, _, limitOrder := utils.BuildWherePageable(callbackPageable, req)
+	where, vals, _, limitOrder := utils.BuildWherePageable(req)
 
 	queryDinamic := "SELECT distinct " + disctintColumn + "	FROM  " + tabla + " " + where + " order by 1 " + limitOrder
 	rows, err := c.QueryContext(ctx, queryDinamic,
@@ -72,8 +72,9 @@ func CoreReadDistinctBySearch(callbackPageable interface{}, disctintColumn strin
 	return list, nil
 }
 
-func CoreReadAll(entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreReadAll(entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
+	pageable := utils.ConvertPageable(entity)
 	selectString, selectArray := utils.BuildSelect(entity)
 
 	rows, err := c.QueryContext(ctx, " select "+selectString+"	FROM "+tabla+" order by "+pageable.Sort+" limit $1 offset $2",
