@@ -7,7 +7,7 @@ import (
 	"log"
 	"reflect"
 
-	"github.com/7carlosz/go-proto-utils/utils"
+	utils "github.com/7carlosz/go-proto-utils/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
