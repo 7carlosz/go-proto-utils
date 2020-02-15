@@ -49,7 +49,7 @@ func remove(slice []interface{}, s int) []interface{} {
 	}
 	return ret
 }
-func CoreReadDistinctBySearch(disctintColumn string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreReadDistinctBySearch(disctintColumn string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
 	where, vals, _, limitOrder := utils.BuildWherePageable(req)
 
