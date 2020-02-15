@@ -461,35 +461,36 @@ func ValidateFechas(interf interface{}, date, hour, dateHour string) string {
 
 	return ""
 }
-
 func ConvertPageable(interf interface{}) Pageable {
-
 	var pageable = Pageable{Offset: 0, Limit: 50, Sort: "id"}
 
-	req := reflect.New(reflect.TypeOf(interf))
+	count := reflect.ValueOf(interf).Elem().NumField()
 	val := reflect.Indirect(reflect.ValueOf(interf))
-
-	for i := 0; i < reflect.TypeOf(req).NumField(); i++ {
+	for i := 0; i < count; i++ {
 		var field = val.Type().Field(i).Name
-		var fieldData = reflect.ValueOf(req).FieldByName(field)
+		var fieldData = reflect.ValueOf(interf).Elem().FieldByName(field)
 
-		if field != "Offset" {
-			pageable.Offset = GetDataPageableInt(fieldData, pageable.Offset)
-		} else if field == "Limit" {
-			pageable.Limit = GetDataPageableInt(fieldData, pageable.Limit)
-		} else if field == "Sort" {
-			pageable.Sort = GetDataPageableString(fieldData, pageable.Sort)
+		if fieldData.IsValid() {
+
+			if field == "Offset" {
+				//data.Paths[0]
+				pageable.Offset = GetDataPageableInt(fieldData.Interface().(*field_mask.FieldMask), pageable.Offset)
+			} else if field == "Limit" {
+				pageable.Limit = GetDataPageableInt(fieldData.Interface().(*field_mask.FieldMask), pageable.Limit)
+			} else if field == "Sort" {
+				pageable.Sort = GetDataPageableString(fieldData.Interface().(*field_mask.FieldMask), pageable.Sort)
+			}
+
 		}
 
 	}
-
 	return pageable
 }
 
-func GetDataPageableInt(mask reflect.Value, defaultData int64) int64 {
+func GetDataPageableInt(mask *field_mask.FieldMask, defaultData int64) int64 {
 
-	if mask.IsValid() && mask.String() != "" {
-		data, err := strconv.Atoi(mask.String())
+	if mask != nil && mask.Paths[0] != "" {
+		data, err := strconv.Atoi(mask.Paths[0])
 		if err != nil {
 			// handle error
 			fmt.Println(err)
@@ -500,10 +501,10 @@ func GetDataPageableInt(mask reflect.Value, defaultData int64) int64 {
 	return defaultData
 }
 
-func GetDataPageableString(mask reflect.Value, defaultData string) string {
+func GetDataPageableString(mask *field_mask.FieldMask, defaultData string) string {
 
-	if mask.IsValid() && mask.String() != "" {
-		defaultData = mask.String()
+	if mask != nil && mask.Paths[0] != "" {
+		defaultData = mask.Paths[0]
 	}
 
 	return defaultData

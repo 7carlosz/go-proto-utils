@@ -253,12 +253,17 @@ func CoreDelete(id int64, ctx context.Context, c *sql.Conn, tabla string) (int64
 	return rows, nil
 }
 
+func nuevoInstance(i interface{}) interface{} {
+	return reflect.Indirect(reflect.ValueOf(i)).Interface()
+}
+
 func TraducirRespuestaListCore(entity interface{}, rows *sql.Rows, listColumn []string, dateValidate, hourValidate, dateHourValidate string) []interface{} {
 	list := make([]interface{}, 0)
 
 	for rows.Next() {
-		interfs := utils.ScanData(reflect.New(reflect.TypeOf(entity)), rows, listColumn, dateValidate, hourValidate, dateHourValidate)
-		list = append(list, interfs)
+
+		i := utils.ScanData(entity, rows, listColumn, dateValidate, hourValidate, dateHourValidate)
+		list = append(list, nuevoInstance(i))
 	}
 
 	return list
