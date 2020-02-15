@@ -403,6 +403,7 @@ func ScanData(interf interface{}, rows *sql.Rows, listColumn []string, dateValid
 	}
 	return interf
 }
+
 func splitString(dat string) []string {
 	var ret = make([]string, 0)
 	var temp = make([]string, 0)
