@@ -72,9 +72,9 @@ func CoreReadDistinctBySearch(disctintColumn string, req interface{}, entity int
 	return list, nil
 }
 
-func CoreReadAll(entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreReadAll(entity interface{}, req interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	pageable := utils.ConvertPageable(entity)
+	pageable := utils.ConvertPageable(req)
 	selectString, selectArray := utils.BuildSelect(entity)
 
 	rows, err := c.QueryContext(ctx, " select "+selectString+"	FROM "+tabla+" order by "+pageable.Sort+" limit $1 offset $2",
