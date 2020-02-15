@@ -16,7 +16,7 @@ func Init() {
 
 }
 
-func CoreReadBySearch(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, pageable utils.Pageable, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+func CoreReadBySearch(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
 	where, vals, order, limitOrder := utils.BuildWherePageable(req)
 	selectString, selectArray := utils.BuildSelect(entity)
