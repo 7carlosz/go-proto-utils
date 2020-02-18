@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 
 	utils "github.com/7carlosz/go-proto-utils/utils"
 	"google.golang.org/grpc/codes"
@@ -76,8 +77,8 @@ func CoreReadAll(entity interface{}, req interface{}, ctx context.Context, c *sq
 
 	pageable := utils.ConvertPageable(req)
 	selectString, selectArray := utils.BuildSelect(entity)
-
-	rows, err := c.QueryContext(ctx, " select "+selectString+"	FROM "+tabla+" order by "+pageable.Sort+" limit $1 offset $2",
+	var order = " order by " + strings.ReplaceAll(pageable.Sort, "[concat]", ",")
+	rows, err := c.QueryContext(ctx, " select "+selectString+"	FROM "+tabla+order+" limit $1 offset $2",
 		pageable.Limit, pageable.Offset,
 	)
 	if err != nil {

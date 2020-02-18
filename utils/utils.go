@@ -105,7 +105,7 @@ func BuildWherePageable(req interface{}) (string, []interface{}, string, string)
 
 	}
 
-	var order = " order by " + pageable.Sort
+	var order = " order by " + strings.ReplaceAll(pageable.Sort, "[concat]", ",")
 	var limitOrder = " limit $" + strconv.Itoa(len(vals)-1) + " offset $" + strconv.Itoa(len(vals))
 	vals[len(vals)-2] = pageable.Limit
 	vals[len(vals)-1] = pageable.Offset
