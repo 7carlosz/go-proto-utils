@@ -404,6 +404,49 @@ func ScanData(interf interface{}, rows *sql.Rows, listColumn []string, dateValid
 	return interf
 }
 
+func BuildWhere(req interface{}) (string, []interface{}) {
+
+	val := reflect.Indirect(reflect.ValueOf(req))
+	var where string = ""
+	var index int = 0
+	var count int = 0
+	for i := 0; i < reflect.ValueOf(req).Elem().NumField()-3; i++ {
+		var field = val.Type().Field(i).Name
+		var fieldData = reflect.ValueOf(req).Elem().FieldByName(field)
+		if fieldData.IsValid() && !fieldData.IsNil() {
+			var data = fieldData.Interface().(*field_mask.FieldMask)
+			if data.Paths[0] != "[null]" {
+				count++
+			}
+		}
+
+	}
+	vals := make([]interface{}, count)
+
+	for i := 0; i < reflect.ValueOf(req).Elem().NumField()-3; i++ {
+
+		var field = val.Type().Field(i).Name
+		var fieldData = reflect.ValueOf(req).Elem().FieldByName(field)
+		if fieldData.IsValid() && !fieldData.IsNil() {
+			var data = fieldData.Interface().(*field_mask.FieldMask)
+			if data.Paths[0] == "[null]" {
+				where = where + convertFiledNameColumn(field) + " is null and "
+			} else {
+				vals[index] = data.Paths[0]
+				where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+				index++
+			}
+		}
+
+	}
+
+	if where != "" {
+		where = " where " + where[:len(where)-4]
+	}
+
+	return where, vals
+}
+
 func splitString(dat string) []string {
 	var ret = make([]string, 0)
 	var temp = make([]string, 0)
