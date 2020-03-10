@@ -44,7 +44,7 @@ func CoreReadBySearch(req interface{}, entity interface{}, ctx context.Context, 
 	selectString, selectArray := utils.BuildSelect(entity)
 
 	var query string = "SELECT " + selectString + "	FROM  " + tabla + " " + where + " " + order + " " + limitOrder
-
+	log.Println(query)
 	rows, err := c.QueryContext(ctx, query,
 		vals...,
 	)
@@ -75,8 +75,9 @@ func CoreReadDistinctBySearch(disctintColumn string, req interface{}, entity int
 
 	where, vals, _, limitOrder := utils.BuildWherePageable(req)
 
-	queryDinamic := "SELECT distinct " + disctintColumn + "	FROM  " + tabla + " " + where + " order by 1 " + limitOrder
-	rows, err := c.QueryContext(ctx, queryDinamic,
+	query := "SELECT distinct " + disctintColumn + "	FROM  " + tabla + " " + where + " order by 1 " + limitOrder
+	log.Println(query)
+	rows, err := c.QueryContext(ctx, query,
 		vals...,
 	)
 	if err != nil {
@@ -103,7 +104,10 @@ func CoreReadAll(entity interface{}, req interface{}, ctx context.Context, c *sq
 		order = " order by 1"
 	}
 
-	rows, err := c.QueryContext(ctx, " select "+selectString+"	FROM "+tabla+order+" limit $1 offset $2",
+	query := " select " + selectString + "	FROM " + tabla + order + " limit $1 offset $2"
+	log.Println(query)
+
+	rows, err := c.QueryContext(ctx, query,
 		pageable.Limit, pageable.Offset,
 	)
 	if err != nil {
@@ -120,6 +124,7 @@ func CoreReadAll(entity interface{}, req interface{}, ctx context.Context, c *sq
 
 func CoreQueryReadAll(query string, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 	_, selectArray := utils.BuildSelect(entity)
+	log.Println(query)
 	rows, err := c.QueryContext(ctx, query)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, "failed to select -> "+err.Error())
