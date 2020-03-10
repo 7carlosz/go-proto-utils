@@ -505,7 +505,7 @@ func ValidateFechas(interf interface{}, date, hour, dateHour string) string {
 	return ""
 }
 func ConvertPageable(interf interface{}) Pageable {
-	var pageable = Pageable{Offset: 0, Limit: 50, Sort: "id"}
+	var pageable = Pageable{Offset: 0, Limit: 50, Sort: "default"}
 
 	count := reflect.ValueOf(interf).Elem().NumField()
 	val := reflect.Indirect(reflect.ValueOf(interf))

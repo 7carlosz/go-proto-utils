@@ -98,6 +98,10 @@ func CoreReadAll(entity interface{}, req interface{}, ctx context.Context, c *sq
 	pageable := utils.ConvertPageable(req)
 	selectString, selectArray := utils.BuildSelect(entity)
 	var order = " order by " + strings.ReplaceAll(pageable.Sort, "[concat]", ",")
+	if pageable.Sort == "default" {
+		order = " order by 1"
+	}
+
 	rows, err := c.QueryContext(ctx, " select "+selectString+"	FROM "+tabla+order+" limit $1 offset $2",
 		pageable.Limit, pageable.Offset,
 	)
