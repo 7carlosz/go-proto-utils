@@ -22,6 +22,7 @@ func CoreReadCustom(query string, req interface{}, entity interface{}, ctx conte
 	_, vals := utils.BuildWhere(req)
 	_, selectArray := utils.BuildSelect(entity)
 
+	log.Println(query)
 	rows, err := c.QueryContext(ctx, query,
 		vals...,
 	)
