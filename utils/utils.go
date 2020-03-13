@@ -356,6 +356,24 @@ func AddField_mask(val string) *field_mask.FieldMask {
 	return s
 }
 
+func emptyInterface(interf interface{}, listColumn []string) interface{} {
+
+	v := reflect.ValueOf(interf).Elem()
+	for index := 0; index < len(listColumn); index++ {
+		ptr := v.FieldByName(listColumn[index])
+		if ptr.Type().String() == "int64" {
+			ptr.Set(reflect.ValueOf(int64(0)))
+		} else {
+
+			ptr.Set(reflect.ValueOf(""))
+
+		}
+
+	}
+
+	return interf
+}
+
 func ScanData(interf interface{}, rows *sql.Rows, listColumn []string, dateValidate, hourValidate, dateHourValidate string) interface{} {
 
 	var listDates = splitString(dateValidate)
@@ -372,7 +390,7 @@ func ScanData(interf interface{}, rows *sql.Rows, listColumn []string, dateValid
 	if err := rows.Scan(listRec...); err != nil {
 		fmt.Println("failed to retrieve field values from  row-> " + err.Error())
 	}
-
+	interf = emptyInterface(interf, listColumn)
 	v := reflect.ValueOf(interf).Elem()
 
 	for index := 0; index < len(listColumn); index++ {
