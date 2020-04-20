@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -76,7 +77,7 @@ func CoreReadDistinctBySearch(disctintColumn string, req interface{}, entity int
 	where, vals, _, limitOrder := utils.BuildWherePageable(req)
 
 	query := "SELECT distinct " + disctintColumn + "	FROM  " + tabla + " " + where + " order by 1 " + limitOrder
-	log.Println(query)
+
 	rows, err := c.QueryContext(ctx, query,
 		vals...,
 	)
@@ -298,4 +299,11 @@ func TraducirRespuestaListCore(entity interface{}, rows *sql.Rows, listColumn []
 	}
 
 	return list
+}
+
+func ValidateQueryParam(req *http.Request, i interface{}) {
+	fmt.Println(req)
+	queryParam := req.URL.Query()
+	fmt.Println(queryParam)
+	utils.GetFields(i)
 }

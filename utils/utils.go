@@ -574,3 +574,16 @@ func GetDataPageableString(mask *field_mask.FieldMask, defaultData string) strin
 
 	return defaultData
 }
+
+func GetFields(interf interface{}) []string {
+	var ret = make([]string, 0)
+
+	count := reflect.ValueOf(interf).Elem().NumField()
+	val := reflect.Indirect(reflect.ValueOf(interf))
+	for i := 0; i < count; i++ {
+		var field = val.Type().Field(i).Name
+		ret = append(ret, field)
+
+	}
+	return ret
+}
