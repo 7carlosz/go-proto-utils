@@ -318,7 +318,7 @@ func IsValidoQueryParam(req *http.Request, i interface{}) {
 	}
 }
 
-func IsValidoNotQueryParam(req *http.Request) (bool, string) {
+func isValidoNotQueryParam(req *http.Request) (bool, string) {
 	param := ""
 	queryParam := req.URL.Query()
 	if len(queryParam) > 0 {
@@ -455,9 +455,15 @@ func IsValidoCreate(req *http.Request, i interface{}) (bool, string) {
 		return false, msgErr
 	}
 
-	ok, msgErr = IsValidoNotQueryParam(req)
+	ok, msgErr = isValidoNotQueryParam(req)
 	if !ok {
 		return false, msgErr
 	}
 	return true, msgErr
+}
+
+func IsValidoRead(req *http.Request) (bool, string) {
+	ok, msgErr := isValidoNotQueryParam(req)
+	return ok, msgErr
+
 }
