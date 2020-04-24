@@ -468,3 +468,18 @@ func IsValidoRead(req *http.Request) (bool, string) {
 	return ok, msgErr
 
 }
+
+func IsValidoUpdate(req *http.Request, i interface{}) (bool, string) {
+
+	ok, msgErr := IsValidoBody(req, i)
+	if !ok {
+		return false, msgErr
+	}
+
+	ok, msgErr = isValidoNotQueryParam(req)
+	if !ok {
+		return false, msgErr
+	}
+	return true, msgErr
+
+}
