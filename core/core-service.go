@@ -1,13 +1,17 @@
 package v1
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"reflect"
 	"strings"
+	"unicode"
 
 	utils "github.com/7carlosz/go-proto-utils/utils"
 	"google.golang.org/grpc/codes"
@@ -301,9 +305,159 @@ func TraducirRespuestaListCore(entity interface{}, rows *sql.Rows, listColumn []
 	return list
 }
 
-func ValidateQueryParam(req *http.Request, i interface{}) {
-	fmt.Println(req)
+func IsValidoQueryParam(req *http.Request, i interface{}) {
+
 	queryParam := req.URL.Query()
-	fmt.Println(queryParam)
-	utils.GetFields(i)
+	listFields := utils.GetFields(i)
+	for i := 0; i < len(listFields)-3; i++ {
+
+		for key, element := range queryParam {
+			fmt.Println("Key:", key, "=>", "Element:", element)
+		}
+		fmt.Println("validando " + listFields[i])
+	}
+}
+
+func IsValidoNotQueryParam(req *http.Request) (bool, string) {
+	param := ""
+	queryParam := req.URL.Query()
+	if len(queryParam) > 0 {
+		for key, _ := range queryParam {
+			param = key
+			break
+		}
+		return false, "Parametro no esperado " + param
+	} else {
+		return true, param
+
+	}
+
+}
+
+func isObjecBodyValido(bodyJson map[string]interface{}, i interface{}) (bool, string, []string) {
+	ret := make([]string, 0)
+	listFields := utils.GetFields(i)
+	for key := range bodyJson {
+		var existe bool = false
+		for i := 0; i < len(listFields)-3; i++ {
+			if convertNameField(key) == listFields[i] {
+				existe = true
+				ret = append(ret, key)
+			}
+		}
+		if !existe {
+			return false, key + " no es un parametro valido", ret
+		}
+	}
+	return true, "", ret
+}
+
+func isObjecBodyInterfaceValido(bodyJson map[string]interface{}, i interface{}) (bool, string) {
+
+	listFields := utils.GetFields(i)
+	for key := range bodyJson {
+		var existe bool = false
+		for i := 0; i < len(listFields)-3; i++ {
+			if convertNameField(key) == listFields[i] {
+				existe = true
+			}
+		}
+		if !existe {
+			return false, key + " no es un parametro valido"
+		}
+	}
+	return true, ""
+}
+
+func IsValidoBody(req *http.Request, i interface{}) (bool, string) {
+	buf, _ := ioutil.ReadAll(req.Body)
+	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
+	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+
+	req.Body = rdr2
+
+	body, _ := ioutil.ReadAll(rdr1)
+	if len(body) < 1 {
+		return false, "Body incompleto"
+	}
+	var bodyJson map[string]interface{}
+	json.Unmarshal(body, &bodyJson)
+	ok, errMsg, listKey := isObjecBodyValido(bodyJson, i)
+	if !ok {
+		return false, errMsg
+	}
+
+	for _, keyBody := range listKey {
+		Bodyobject := bodyJson[keyBody]
+
+		for keyBodyobject, _ := range Bodyobject.(map[string]interface{}) {
+			fmt.Println("key object object " + keyBodyobject)
+			f := reflect.ValueOf(i).Elem().FieldByName(convertNameField(keyBody)).Type()
+
+			existeKey := false
+			for in3 := 0; in3 < f.Elem().NumField()-3; in3++ {
+
+				if convertNameField(keyBodyobject) == f.Elem().Field(in3).Name {
+					existeKey = true
+				}
+
+			}
+
+			if !existeKey {
+				return false, keyBodyobject + " no es un parametro valido"
+			}
+
+		}
+	}
+
+	return true, ""
+}
+
+func existeKeyObject(fieldName string, i interface{}) bool {
+	var existe bool = false
+	v := reflect.ValueOf(i).Elem()
+	for in := 0; in < reflect.ValueOf(i).Elem().NumField()-3; in++ {
+		var field = v.Type().Field(in).Name
+
+		fmt.Println(field)
+		fmt.Println("----------")
+		fmt.Println(fieldName)
+
+		if field == fieldName {
+			existe = true
+		}
+	}
+	return existe
+}
+
+func convertNameField(field string) string {
+	var ret = ""
+	for pos, char := range field {
+		_ = pos
+		_ = char
+		if pos < 1 {
+			if !unicode.IsUpper(char) {
+				ret = ret + strings.ToUpper(string(char))
+			}
+
+		} else {
+			ret = ret + string(char)
+
+		}
+	}
+
+	return ret
+}
+
+func IsValidoCreate(req *http.Request, i interface{}) (bool, string) {
+	ok, msgErr := IsValidoBody(req, i)
+	if !ok {
+		return false, msgErr
+	}
+
+	ok, msgErr = IsValidoNotQueryParam(req)
+	if !ok {
+		return false, msgErr
+	}
+	return true, msgErr
 }
