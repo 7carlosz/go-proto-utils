@@ -463,6 +463,7 @@ func IsValidoCreate(req *http.Request, i interface{}) (bool, string) {
 }
 
 func IsValidoRead(req *http.Request) (bool, string) {
+
 	ok, msgErr := isValidoNotQueryParam(req)
 	return ok, msgErr
 
