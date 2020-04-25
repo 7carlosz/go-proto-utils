@@ -369,7 +369,7 @@ func isObjecBodyInterfaceValido(bodyJson map[string]interface{}, i interface{}) 
 	return true, ""
 }
 
-func IsValidoBody(req *http.Request, i interface{}) (bool, string) {
+func isValidoBody(req *http.Request, i interface{}) (bool, string) {
 	buf, _ := ioutil.ReadAll(req.Body)
 	rdr1 := ioutil.NopCloser(bytes.NewBuffer(buf))
 	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
@@ -413,6 +413,27 @@ func IsValidoBody(req *http.Request, i interface{}) (bool, string) {
 	return true, ""
 }
 
+func isValidoQueryParam(req *http.Request, i interface{}) (bool, string) {
+	queryParam := req.URL.Query()
+	listFields := utils.GetFields(i)
+	for keyParam, _ := range queryParam {
+		existe := false
+		for _, fieldInterface := range listFields {
+			if convertNameField(keyParam) == fieldInterface {
+				existe = true
+				break
+			}
+		}
+
+		if !existe {
+			return false, keyParam + " no es un parametro valido"
+		}
+
+	}
+
+	return true, ""
+}
+
 func existeKeyObject(fieldName string, i interface{}) bool {
 	var existe bool = false
 	v := reflect.ValueOf(i).Elem()
@@ -450,7 +471,7 @@ func convertNameField(field string) string {
 }
 
 func IsValidoCreate(req *http.Request, i interface{}) (bool, string) {
-	ok, msgErr := IsValidoBody(req, i)
+	ok, msgErr := isValidoBody(req, i)
 	if !ok {
 		return false, msgErr
 	}
@@ -471,7 +492,7 @@ func IsValidoRead(req *http.Request) (bool, string) {
 
 func IsValidoUpdate(req *http.Request, i interface{}) (bool, string) {
 
-	ok, msgErr := IsValidoBody(req, i)
+	ok, msgErr := isValidoBody(req, i)
 	if !ok {
 		return false, msgErr
 	}
@@ -489,4 +510,21 @@ func IsValidoDelete(req *http.Request) (bool, string) {
 	ok, msgErr := isValidoNotQueryParam(req)
 	return ok, msgErr
 
+}
+func IsValidoReadAll(req *http.Request, i interface{}) (bool, string) {
+	ok, msgErr := isValidoQueryParam(req, i)
+	if !ok {
+		return false, msgErr
+	}
+
+	return true, msgErr
+}
+
+func IsValidoReadBySearch(req *http.Request, i interface{}) (bool, string) {
+	ok, msgErr := isValidoQueryParam(req, i)
+	if !ok {
+		return false, msgErr
+	}
+
+	return true, msgErr
 }
