@@ -483,3 +483,10 @@ func IsValidoUpdate(req *http.Request, i interface{}) (bool, string) {
 	return true, msgErr
 
 }
+
+func IsValidoDelete(req *http.Request) (bool, string) {
+
+	ok, msgErr := isValidoNotQueryParam(req)
+	return ok, msgErr
+
+}
