@@ -549,6 +549,10 @@ func ConvertPageable(interf interface{}) Pageable {
 		}
 
 	}
+
+	if pageable.Limit == 0 {
+		pageable.Limit = 50
+	}
 	return pageable
 }
 
