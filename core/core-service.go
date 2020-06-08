@@ -45,7 +45,7 @@ func CoreReadCustom(query string, req interface{}, entity interface{}, ctx conte
 
 func CoreReadBySearch(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, order, limitOrder := utils.BuildWherePageable(req)
+	where, vals, order, limitOrder := utils.BuildWherePageable(req, false)
 	selectString, selectArray := utils.BuildSelect(entity)
 
 	var query string = "SELECT " + selectString + "	FROM  " + tabla + " " + where + " " + order + " " + limitOrder
@@ -76,9 +76,32 @@ func remove(slice []interface{}, s int) []interface{} {
 	}
 	return ret
 }
+
+func CoreReadBySearchLike(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+
+	where, vals, order, limitOrder := utils.BuildWherePageable(req, true)
+	selectString, selectArray := utils.BuildSelect(entity)
+
+	var query string = "SELECT " + selectString + "	FROM  " + tabla + " " + where + " " + order + " " + limitOrder
+	log.Println(query)
+	rows, err := c.QueryContext(ctx, query,
+		vals...,
+	)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, "failed to select -> "+err.Error())
+	}
+	defer rows.Close()
+
+	list := TraducirRespuestaListCore(entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	if len(list) < 1 {
+		return nil, status.Error(codes.NotFound, "Recurso no encontrado")
+	}
+	return list, nil
+}
+
 func CoreReadDistinctBySearch(disctintColumn string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, _, limitOrder := utils.BuildWherePageable(req)
+	where, vals, _, limitOrder := utils.BuildWherePageable(req, false)
 
 	query := "SELECT distinct " + disctintColumn + "	FROM  " + tabla + " " + where + " order by 1 " + limitOrder
 

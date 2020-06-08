@@ -61,7 +61,7 @@ func BuildSelect(req interface{}) (string, []string) {
 }
 
 //var call util.NewEntityInterface = NewEntity{}
-func BuildWherePageable(req interface{}) (string, []interface{}, string, string) {
+func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, string, string) {
 
 	pageable := ConvertPageable(req)
 	val := reflect.Indirect(reflect.ValueOf(req))
@@ -95,8 +95,13 @@ func BuildWherePageable(req interface{}) (string, []interface{}, string, string)
 				if data.Paths[0] == "[null]" {
 					where = where + convertFiledNameColumn(field) + " is null and "
 				} else {
-					vals[index] = data.Paths[0]
-					where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+					if isLike {
+						vals[index] = "%" + strings.ToUpper(data.Paths[0]) + "%"
+						where = where + "upper(" + convertFiledNameColumn(field) + ")" + " like $" + strconv.Itoa(index+1) + " and "
+					} else {
+						vals[index] = data.Paths[0]
+						where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+					}
 					index++
 				}
 			}
