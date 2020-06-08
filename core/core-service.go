@@ -528,3 +528,12 @@ func IsValidoReadBySearch(req *http.Request, i interface{}) (bool, string) {
 
 	return true, msgErr
 }
+
+func IsValidoReadBySearchLike(req *http.Request, i interface{}) (bool, string) {
+	ok, msgErr := isValidoQueryParam(req, i)
+	if !ok {
+		return false, msgErr
+	}
+
+	return true, msgErr
+}
