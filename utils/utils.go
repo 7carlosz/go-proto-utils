@@ -97,7 +97,7 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 				} else {
 					if isLike {
 						vals[index] = "%" + strings.ToUpper(data.Paths[0]) + "%"
-						where = where + "upper(" + convertFiledNameColumn(field) + ")" + " like $" + strconv.Itoa(index+1) + " and "
+						where = where + "upper(CAST (" + convertFiledNameColumn(field) + ") as VARCHAR     )" + " like $" + strconv.Itoa(index+1) + " and "
 					} else {
 						vals[index] = data.Paths[0]
 						where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
