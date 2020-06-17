@@ -71,7 +71,7 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 	for i := 0; i < reflect.ValueOf(req).Elem().NumField()-3; i++ {
 		var field = val.Type().Field(i).Name
 
-		if field != "Offset" && field != "Limit" && field != "Sort" {
+		if field != "Offset" && field != "Limit" && field != "Sort" && field != "NoLike" {
 			var fieldData = reflect.ValueOf(req).Elem().FieldByName(field)
 			if fieldData.IsValid() && !fieldData.IsNil() {
 				var data = fieldData.Interface().(*field_mask.FieldMask)
@@ -85,19 +85,34 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 	}
 	vals := make([]interface{}, count+2)
 
+	listNoLike := make([]string, 0)
+
+	var fieldDataNoLike = reflect.ValueOf(req).Elem().FieldByName("NoLike")
+
+	if fieldDataNoLike.IsValid() && !fieldDataNoLike.IsNil() {
+		var data = fieldDataNoLike.Interface().(*field_mask.FieldMask)
+		listNoLike = splitStringConvertFiledNameColumn(data.Paths[0])
+
+	}
+
 	for i := 0; i < reflect.ValueOf(req).Elem().NumField()-3; i++ {
 
 		var field = val.Type().Field(i).Name
 		var fieldData = reflect.ValueOf(req).Elem().FieldByName(field)
-		if field != "Offset" && field != "Limit" && field != "Sort" {
+		if field != "Offset" && field != "Limit" && field != "Sort" && field != "NoLike" {
 			if fieldData.IsValid() && !fieldData.IsNil() {
 				var data = fieldData.Interface().(*field_mask.FieldMask)
 				if data.Paths[0] == "[null]" {
 					where = where + convertFiledNameColumn(field) + " is null and "
 				} else {
 					if isLike {
-						vals[index] = "%" + strings.ToUpper(data.Paths[0]) + "%"
-						where = where + "upper(CAST (" + convertFiledNameColumn(field) + " as VARCHAR)      )" + " like $" + strconv.Itoa(index+1) + " and "
+						if stringInSlice(convertFiledNameColumn(field), listNoLike) {
+							vals[index] = data.Paths[0]
+							where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+						} else {
+							vals[index] = "%" + strings.ToUpper(data.Paths[0]) + "%"
+							where = where + "upper(CAST (" + convertFiledNameColumn(field) + " as VARCHAR)      )" + " like $" + strconv.Itoa(index+1) + " and "
+						}
 					} else {
 						vals[index] = data.Paths[0]
 						where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
@@ -594,5 +609,20 @@ func GetFields(interf interface{}) []string {
 		ret = append(ret, field)
 
 	}
+	return ret
+}
+
+func splitStringConvertFiledNameColumn(dat string) []string {
+	var ret = make([]string, 0)
+	var temp = make([]string, 0)
+	if dat != "" {
+		temp = strings.SplitAfter(dat, ",")
+	}
+
+	for index := 0; index < len(temp); index++ {
+		ret = append(ret, convertFiledNameColumn(strings.Replace(temp[index], ",", "", -1)))
+
+	}
+
 	return ret
 }
