@@ -28,7 +28,6 @@ func CoreReadBySearchLikeCustom(query string, req interface{}, entity interface{
 	_, selectArray := utils.BuildSelect(entity)
 
 	query = query + where + " " + order + " " + limitOrder
-	log.Println(vals)
 	rows, err := c.QueryContext(ctx, query,
 		vals...,
 	)
