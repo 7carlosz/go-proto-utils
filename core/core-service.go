@@ -32,7 +32,7 @@ func CoreReadBySearchLikeCustom(query string, req interface{}, entity interface{
 		vals...,
 	)
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to select -> "+err.Error())
+		return nil, status.Error(codes.Unknown, "failed s to select -> "+err.Error())
 	}
 	defer rows.Close()
 
