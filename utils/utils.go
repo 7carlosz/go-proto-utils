@@ -107,9 +107,27 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 				} else {
 					if isLike {
 						if stringInSlice(convertFiledNameColumn(field), listNoLike) {
-							vals[index] = data.Paths[0]
-							where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+
+							if strings.Contains(data.Paths[0], "[concat]") {
+
+								listParamTemp := strings.Split(data.Paths[0], "[concat]")
+
+								var whereIn = make([]string, 0)
+
+								for i := 0; i < len(listParamTemp); i++ {
+									vals[index] = listParamTemp[i]
+									whereIn = append(whereIn, "$"+strconv.Itoa(index+1))
+									index++
+								}
+								index--
+								where = where + convertFiledNameColumn(field) + " in (" + strings.Join(whereIn, ", ") + ") and "
+							} else {
+								vals[index] = data.Paths[0]
+								where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+							}
+
 						} else {
+
 							vals[index] = "%" + strings.ToUpper(data.Paths[0]) + "%"
 							where = where + "upper(CAST (" + convertFiledNameColumn(field) + " as VARCHAR)      )" + " like $" + strconv.Itoa(index+1) + " and "
 						}
@@ -616,7 +634,7 @@ func splitStringConvertFiledNameColumn(dat string) []string {
 	var ret = make([]string, 0)
 	var temp = make([]string, 0)
 	if dat != "" {
-		temp = strings.SplitAfter(dat, ",")
+		temp = strings.SplitAfter(dat, "[concat]")
 	}
 
 	for index := 0; index < len(temp); index++ {
