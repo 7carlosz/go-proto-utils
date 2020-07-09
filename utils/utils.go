@@ -68,6 +68,15 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 	var where string = ""
 	var index int = 0
 	var count int = 0
+
+	listNoLike := make([]string, 0)
+	var fieldDataNoLike = reflect.ValueOf(req).Elem().FieldByName("NoLike")
+	if fieldDataNoLike.IsValid() && !fieldDataNoLike.IsNil() {
+		var data = fieldDataNoLike.Interface().(*field_mask.FieldMask)
+		listNoLike = splitStringConvertFiledNameColumn(data.Paths[0])
+
+	}
+
 	for i := 0; i < reflect.ValueOf(req).Elem().NumField()-3; i++ {
 		var field = val.Type().Field(i).Name
 
@@ -76,7 +85,14 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 			if fieldData.IsValid() && !fieldData.IsNil() {
 				var data = fieldData.Interface().(*field_mask.FieldMask)
 				if data.Paths[0] != "[null]" {
-					count++
+
+					if stringInSlice(convertFiledNameColumn(field), listNoLike) {
+						listParamTemp := strings.Split(data.Paths[0], "[concat]")
+						count = count + len(listParamTemp)
+					} else {
+						count++
+					}
+
 				}
 			}
 
@@ -84,16 +100,6 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 
 	}
 	vals := make([]interface{}, count+2)
-
-	listNoLike := make([]string, 0)
-
-	var fieldDataNoLike = reflect.ValueOf(req).Elem().FieldByName("NoLike")
-
-	if fieldDataNoLike.IsValid() && !fieldDataNoLike.IsNil() {
-		var data = fieldDataNoLike.Interface().(*field_mask.FieldMask)
-		listNoLike = splitStringConvertFiledNameColumn(data.Paths[0])
-
-	}
 
 	for i := 0; i < reflect.ValueOf(req).Elem().NumField()-3; i++ {
 
@@ -107,24 +113,16 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 				} else {
 					if isLike {
 						if stringInSlice(convertFiledNameColumn(field), listNoLike) {
+							listParamTemp := strings.Split(data.Paths[0], "[concat]")
 
-							if strings.Contains(data.Paths[0], "[concat]") {
+							var whereIn = make([]string, 0)
 
-								listParamTemp := strings.Split(data.Paths[0], "[concat]")
-
-								var whereIn = make([]string, 0)
-
-								for i := 0; i < len(listParamTemp); i++ {
-									vals[index] = listParamTemp[i]
-									whereIn = append(whereIn, "$"+strconv.Itoa(index+1))
-									index++
-								}
-								index--
-								where = where + convertFiledNameColumn(field) + " in (" + strings.Join(whereIn, ", ") + ") and "
-							} else {
-								vals[index] = data.Paths[0]
-								where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+							for i := 0; i < len(listParamTemp); i++ {
+								vals[index] = listParamTemp[i]
+								whereIn = append(whereIn, "$"+strconv.Itoa(index+1))
+								index++
 							}
+							where = where + convertFiledNameColumn(field) + " in (" + strings.Join(whereIn, ", ") + ") and "
 
 						} else {
 
@@ -634,13 +632,12 @@ func splitStringConvertFiledNameColumn(dat string) []string {
 	var ret = make([]string, 0)
 	var temp = make([]string, 0)
 	if dat != "" {
-		temp = strings.SplitAfter(dat, "[concat]")
+		temp = strings.Split(dat, "[concat]")
 	}
 
 	for index := 0; index < len(temp); index++ {
 		ret = append(ret, convertFiledNameColumn(strings.Replace(temp[index], ",", "", -1)))
 
 	}
-
 	return ret
 }
