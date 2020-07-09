@@ -151,7 +151,7 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 	vals[len(vals)-1] = pageable.Offset
 
 	if where != "" {
-		where = " where " + where[:len(where)-4]
+		where = " where  " + where[:len(where)-4]
 	}
 
 	return where, vals, order, limitOrder
