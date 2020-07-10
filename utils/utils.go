@@ -62,7 +62,7 @@ func BuildSelect(req interface{}) (string, []string) {
 
 //var call util.NewEntityInterface = NewEntity{}
 func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, string, string) {
-
+	fmt.Println(req)
 	pageable := ConvertPageable(req)
 	val := reflect.Indirect(reflect.ValueOf(req))
 	var where string = ""
@@ -84,16 +84,20 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 			var fieldData = reflect.ValueOf(req).Elem().FieldByName(field)
 			if fieldData.IsValid() && !fieldData.IsNil() {
 				var data = fieldData.Interface().(*field_mask.FieldMask)
-				if data.Paths[0] != "[null]" {
 
-					if stringInSlice(convertFiledNameColumn(field), listNoLike) {
-						listParamTemp := strings.Split(data.Paths[0], "[concat]")
-						count = count + len(listParamTemp)
-					} else {
-						count++
+				if len(data.Paths) > 0 {
+					if data.Paths[0] != "[null]" {
+
+						if stringInSlice(convertFiledNameColumn(field), listNoLike) {
+							listParamTemp := strings.Split(data.Paths[0], "[concat]")
+							count = count + len(listParamTemp)
+						} else {
+							count++
+						}
+
 					}
-
 				}
+
 			}
 
 		}
@@ -108,33 +112,37 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 		if field != "Offset" && field != "Limit" && field != "Sort" && field != "NoLike" {
 			if fieldData.IsValid() && !fieldData.IsNil() {
 				var data = fieldData.Interface().(*field_mask.FieldMask)
-				if data.Paths[0] == "[null]" {
-					where = where + convertFiledNameColumn(field) + " is null and "
-				} else {
-					if isLike {
-						if stringInSlice(convertFiledNameColumn(field), listNoLike) {
-							listParamTemp := strings.Split(data.Paths[0], "[concat]")
 
-							var whereIn = make([]string, 0)
-
-							for i := 0; i < len(listParamTemp); i++ {
-								vals[index] = listParamTemp[i]
-								whereIn = append(whereIn, "$"+strconv.Itoa(index+1))
-								index++
-							}
-							where = where + convertFiledNameColumn(field) + " in (" + strings.Join(whereIn, ", ") + ") and "
-
-						} else {
-
-							vals[index] = "%" + strings.ToUpper(data.Paths[0]) + "%"
-							where = where + "upper(CAST (" + convertFiledNameColumn(field) + " as VARCHAR)      )" + " like $" + strconv.Itoa(index+1) + " and "
-						}
+				if len(data.Paths) > 0 {
+					if data.Paths[0] == "[null]" {
+						where = where + convertFiledNameColumn(field) + " is null and "
 					} else {
-						vals[index] = data.Paths[0]
-						where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+						if isLike {
+							if stringInSlice(convertFiledNameColumn(field), listNoLike) {
+								listParamTemp := strings.Split(data.Paths[0], "[concat]")
+
+								var whereIn = make([]string, 0)
+
+								for i := 0; i < len(listParamTemp); i++ {
+									vals[index] = listParamTemp[i]
+									whereIn = append(whereIn, "$"+strconv.Itoa(index+1))
+									index++
+								}
+								where = where + convertFiledNameColumn(field) + " in (" + strings.Join(whereIn, ", ") + ") and "
+
+							} else {
+
+								vals[index] = "%" + strings.ToUpper(data.Paths[0]) + "%"
+								where = where + "upper(CAST (" + convertFiledNameColumn(field) + " as VARCHAR)      )" + " like $" + strconv.Itoa(index+1) + " and "
+							}
+						} else {
+							vals[index] = data.Paths[0]
+							where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+						}
+						index++
 					}
-					index++
 				}
+
 			}
 
 		}
