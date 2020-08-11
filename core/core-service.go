@@ -24,7 +24,7 @@ func Init() {
 
 func CoreReadBySearchLikeCustom(query string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, order, limitOrder := utils.BuildWherePageable(req, true)
+	where, vals, order, limitOrder := utils.BuildWherePageable(req, true, false)
 	_, selectArray := utils.BuildSelect(entity)
 
 	query = query + where + " " + order + " " + limitOrder
@@ -67,7 +67,7 @@ func CoreReadCustom(query string, req interface{}, entity interface{}, ctx conte
 
 func CoreReadBySearch(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, order, limitOrder := utils.BuildWherePageable(req, false)
+	where, vals, order, limitOrder := utils.BuildWherePageable(req, false, false)
 	selectString, selectArray := utils.BuildSelect(entity)
 
 	var query string = "SELECT " + selectString + "	FROM  " + tabla + " " + where + " " + order + " " + limitOrder
@@ -101,7 +101,7 @@ func remove(slice []interface{}, s int) []interface{} {
 
 func CoreReadBySearchLike(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, order, limitOrder := utils.BuildWherePageable(req, true)
+	where, vals, order, limitOrder := utils.BuildWherePageable(req, true, false)
 	selectString, selectArray := utils.BuildSelect(entity)
 
 	var query string = "SELECT " + selectString + "	FROM  " + tabla + " " + where + " " + order + " " + limitOrder
@@ -123,7 +123,7 @@ func CoreReadBySearchLike(req interface{}, entity interface{}, ctx context.Conte
 
 func CoreReadDistinctBySearch(disctintColumn string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, _, limitOrder := utils.BuildWherePageable(req, false)
+	where, vals, _, limitOrder := utils.BuildWherePageable(req, false, false)
 
 	query := "SELECT distinct " + disctintColumn + "	FROM  " + tabla + " " + where + " order by 1 " + limitOrder
 
@@ -585,7 +585,7 @@ func IsValidoReadBySearchLike(req *http.Request, i interface{}) (bool, string) {
 
 func CoreCountBySearch(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, order, limitOrder := utils.BuildWherePageable(req, false)
+	where, vals, order, limitOrder := utils.BuildWherePageable(req, false, false)
 	_, selectArray := utils.BuildSelect(entity)
 
 	var query string = "SELECT count(*) total	FROM  " + tabla + " " + where + " " + order + " " + limitOrder
@@ -605,9 +605,57 @@ func CoreCountBySearch(req interface{}, entity interface{}, ctx context.Context,
 	return list, nil
 }
 
+func CoreDeleteBySearch(req interface{}, ctx context.Context, c *sql.Conn, tabla string) (int64, error) {
+
+	where, vals := utils.BuildWhere(req)
+
+	if where == "" {
+		return 0, status.Error(codes.Unknown, "Where obligatorio")
+
+	}
+
+	res, err := c.ExecContext(ctx, "DELETE FROM "+tabla+" "+where, vals...)
+	if err != nil {
+		return 0, status.Error(codes.Unknown, "failed to delete "+err.Error())
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return 0, status.Error(codes.Unknown, "failed to retrieve rows affected value-> "+err.Error())
+	}
+
+	if rows == 0 {
+		return 0, status.Error(codes.NotFound, "Recurso no encontrado")
+	}
+
+	return rows, nil
+}
+
+func CoreReadBySearchLikeOr(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+
+	where, vals, order, limitOrder := utils.BuildWherePageable(req, true, true)
+	selectString, selectArray := utils.BuildSelect(entity)
+
+	var query string = "SELECT " + selectString + "	FROM  " + tabla + " " + where + " " + order + " " + limitOrder
+	log.Println(query)
+	rows, err := c.QueryContext(ctx, query,
+		vals...,
+	)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, "failed to select -> "+err.Error())
+	}
+	defer rows.Close()
+
+	list := TraducirRespuestaListCore(entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	if len(list) < 1 {
+		return nil, status.Error(codes.NotFound, "Recurso no encontrado")
+	}
+	return list, nil
+}
+
 func CoreCountBySearchLike(req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
 
-	where, vals, order, limitOrder := utils.BuildWherePageable(req, true)
+	where, vals, order, limitOrder := utils.BuildWherePageable(req, true, false)
 	_, selectArray := utils.BuildSelect(entity)
 
 	var query string = "SELECT count(*) total	FROM  " + tabla + " " + where + " " + order + " " + limitOrder

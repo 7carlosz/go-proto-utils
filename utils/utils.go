@@ -61,7 +61,7 @@ func BuildSelect(req interface{}) (string, []string) {
 }
 
 //var call util.NewEntityInterface = NewEntity{}
-func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, string, string) {
+func BuildWherePageable(req interface{}, isLike bool, isOr bool) (string, []interface{}, string, string) {
 	pageable := ConvertPageable(req)
 	val := reflect.Indirect(reflect.ValueOf(req))
 	var where string = ""
@@ -103,6 +103,11 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 	}
 	vals := make([]interface{}, count+2)
 
+	andOr := " and "
+	if isOr {
+		andOr = " or "
+	}
+
 	for i := 0; i < reflect.ValueOf(req).Elem().NumField()-3; i++ {
 
 		var field = val.Type().Field(i).Name
@@ -113,7 +118,7 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 
 				if len(data.Paths) > 0 {
 					if data.Paths[0] == "[null]" {
-						where = where + convertFiledNameColumn(field) + " is null and "
+						where = where + convertFiledNameColumn(field) + " is null  " + andOr
 					} else {
 						if isLike {
 							if stringInSlice(convertFiledNameColumn(field), listNoLike) {
@@ -130,12 +135,12 @@ func BuildWherePageable(req interface{}, isLike bool) (string, []interface{}, st
 							} else {
 
 								vals[index] = "%" + strings.ToUpper(data.Paths[0]) + "%"
-								where = where + "upper(CAST (" + convertFiledNameColumn(field) + " as VARCHAR)      )" + " like $" + strconv.Itoa(index+1) + " and "
+								where = where + "upper(CAST (" + convertFiledNameColumn(field) + " as VARCHAR)      )" + " like $" + strconv.Itoa(index+1) + andOr
 								index++
 							}
 						} else {
 							vals[index] = data.Paths[0]
-							where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + " and "
+							where = where + convertFiledNameColumn(field) + " = $" + strconv.Itoa(index+1) + andOr
 							index++
 						}
 
