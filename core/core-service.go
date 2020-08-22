@@ -680,7 +680,7 @@ func CoreReadByDistinctSearchLike(campo string, req interface{}, entity interfac
 	where, vals, order, _ := utils.BuildWherePageable(req, true, false)
 	_, selectArray := utils.BuildSelect(entity)
 	vals = vals[:len(vals)-2]
-	var query string = "SELECT distinct(" + campo + ") valor	FROM  " + tabla + " " + where + " " + order
+	var query string = " SELECT distinct(" + campo + ") valor	FROM  " + tabla + " " + where + " " + order
 
 	rows, err := c.QueryContext(ctx, query,
 		vals...,
