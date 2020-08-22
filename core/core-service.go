@@ -674,3 +674,25 @@ func CoreCountBySearchLike(req interface{}, entity interface{}, ctx context.Cont
 	}
 	return list, nil
 }
+
+func CoreReadByDistinctSearchLike(campo string, req interface{}, entity interface{}, ctx context.Context, c *sql.Conn, dateValidate, hourValidate, dateHourValidate string, tabla string) ([]interface{}, error) {
+
+	where, vals, order, _ := utils.BuildWherePageable(req, true, false)
+	_, selectArray := utils.BuildSelect(entity)
+	vals = vals[:len(vals)-2]
+	var query string = "SELECT distinct(" + campo + ") valor	FROM  " + tabla + " " + where + " " + order
+
+	rows, err := c.QueryContext(ctx, query,
+		vals...,
+	)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, "failed to select -> "+err.Error())
+	}
+	defer rows.Close()
+	log.Println(rows)
+	list := TraducirRespuestaListCore(entity, rows, selectArray, dateValidate, hourValidate, dateHourValidate)
+	if len(list) < 1 {
+		return nil, status.Error(codes.NotFound, "Recurso no encontrado")
+	}
+	return list, nil
+}
