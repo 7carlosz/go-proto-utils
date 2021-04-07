@@ -765,3 +765,22 @@ func CoreReadByDistinctSearchLike(campo string, req interface{}, entity interfac
 	}
 	return list, nil
 }
+
+func CoreDeleteCustom(query string, ctx context.Context, c *sql.Conn) (int64, error) {
+
+	res, err := c.ExecContext(ctx, query)
+	if err != nil {
+		return 0, status.Error(codes.Unknown, "failed to delete "+err.Error())
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return 0, status.Error(codes.Unknown, "failed to retrieve rows affected value-> "+err.Error())
+	}
+
+	if rows == 0 {
+		return 0, status.Error(codes.NotFound, "Recurso no encontrado")
+	}
+
+	return rows, nil
+}
